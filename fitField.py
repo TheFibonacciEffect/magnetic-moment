@@ -49,9 +49,7 @@ def Bz(r, m):
 def fit_params(x,y):
     M = np.atleast_2d(1/x[1:]**3).T
     weigth = np.diag(1/y[1:]**2).T
-    weighted_M = weigth * M
-    print(M.shape, weigth.shape, weighted_M.shape)
-    p, res, rnk, s = lstsq(weighted_M, y[1:])
+    p, res, rnk, s = lstsq(M, y[1:])
     print(res)
     plt.plot(x, y, 'o', label='data')
     plt.plot(x, p*x**(-3.), label='fit')
@@ -59,3 +57,4 @@ def fit_params(x,y):
     return p
 
 fit_params(df_front['distance[mm]'], df_front['cube flux density [T]'])
+# %%
