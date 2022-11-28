@@ -47,12 +47,12 @@ def Bz(r, m):
     return -const.mu_0/(4*np.pi*r**3)*m
 
 def fit_params(x,y):
-    M = np.atleast_2d(1/x[1:]**3).T
+    M = np.atleast_2d([1/x[1:]**3,1/x[1:]**4,1/x[1:]**5]).T
     weigth = np.diag(1/y[1:]**2).T
     p, res, rnk, s = lstsq(M, y[1:])
     print(res)
     plt.plot(x, y, 'o', label='data')
-    plt.plot(x, p*x**(-3.), label='fit')
+    plt.plot(x, p[0]*x**(-3.) + p[1]*x**(-4.) + p[2]*x**(-5.), label='fit')
     plt.show()
     return p
 
