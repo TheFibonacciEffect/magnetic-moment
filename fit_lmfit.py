@@ -15,6 +15,10 @@ df_front["cube flux density [T]"] = -df_front["cube flux density [T]"]
 # df_front["distance [mm]"] = df_front["distance [mm]"]
 df_side["cube flux density [T]"] = -df_side["cube flux density [T]"]
 
+# convert to si
+df_front['distance[m]'] = df_front['distance[mm]']*1e-3
+df_side['distance[m]'] = df_side['distance[mm]']*1e-3
+
 df_front
 # %%
 # $\vec{B}(r)=\frac{\mu_0}{4 \pi r^3}[3(\vec{m} \cdot \hat{r}) \hat{r}-\vec{m}]$
@@ -141,14 +145,21 @@ x,y
 def fit_dipole(df_front, Bx_dp,y,x):
     model_dp = Model(Bx_dp)
     params = model_dp.make_params(m=4.6611e+08,r0=-0.05,Q=0)
-    result = model_dp.fit(df_front[y], params, r=df_front[x])
+    result = model_dp.fit(df_front[y], params, r=df_front[x],nan_policy='omit')
     print(result.fit_report())
     return result
 
-result_dp = fit_dipole(df_front, Bx_dp,'cube flux density [T]','distance[mm]')
-# %%
-result_qp = fit_dipole(df_front, Bx_with_qpole,'cube flux density [T]','distance[mm]')
+result_dp_cube_front = fit_dipole(df_front, Bx_dp,'cube flux density [T]','distance[m]')
+result_qp_cube_front = fit_dipole(df_front, Bx_with_qpole,'cube flux density [T]','distance[m]')
 
-plot_results_dipole_quadrupole(df_front, result_dp, result_qp)
+df_results = pd.DataFrame(index=["cube","small cylinder","big cylinder"],columns=["front","side"])
 
-# %%
+for df,name in zip([df_front, df_side],["front","side"]):
+    for magnet_index,y in zip(["cube","small cylinder","big cylinder"],['cube flux density [T]','small cylinder flux density [T]','big cylinder flux density [T]']):
+        for x in ['distance[m]']:
+            result_dp = fit_dipole(df, Bx_dp,y,x)
+            result_qp = fit_dipole(df, Bx_with_qpole,y,x)
+            # df_results.loc[[name,magnet_index]] = [result_dp.params['m'].value,result_qp.params['m'].value]
+            df_results.loc[magnet_index,name] = f"{result_dp.params['m'].value} +/- {result_dp.params['m'].stderr}"
+
+df_results
