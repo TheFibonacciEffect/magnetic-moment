@@ -10,7 +10,6 @@ from lmfit import Model
 # Read data
 df_front = pd.read_csv('Magnetfeld-front.csv')
 df_side = pd.read_csv('Magnetfeld-front.csv')
-df_front
 # clean data
 df_front["cube flux density [T]"] = -df_front["cube flux density [T]"]
 # df_front["distance [mm]"] = df_front["distance [mm]"]
@@ -58,29 +57,29 @@ def Bz(r, m):
 
 # %%
 # withput Qpole
-def fit_cube(df_front, Bx_dp):
+def fit_cube_dp(df_front, Bx_dp):
     model_dp = Model(Bx_dp)
     params = model_dp.make_params(m=4.6611e+08,r0=-0.05)
     result = model_dp.fit(df_front['cube flux density [T]'], params, r=df_front['distance[mm]'])
     print(result.fit_report())
     return result
 
-result = fit_cube(df_front, Bx_dp)
+result = fit_cube_dp(df_front, Bx_dp)
 
 # %%
 
 # with Qpole
-def fit_cube(df_front, Bx_with_qpole):
+def fit_cube_qp(df_front, Bx_with_qpole):
     model_qpole = Model(Bx_with_qpole)
     params_qp = model_qpole.make_params(m=4.6611e+08,Q=0,r0=-0.05)
     result_qp = model_qpole.fit(df_front['cube flux density [T]'], params_qp, r=df_front['distance[mm]'])
     print(result_qp.fit_report())
     return result_qp
 
-result_qp = fit_cube(df_front, Bx_with_qpole)
+result_qp = fit_cube_qp(df_front, Bx_with_qpole)
 # %%
 # plot fit
-def plot_fit(df_front, result, result_qp):
+def plot_results_dipole_quadrupole(df_front, result, result_qp):
     plt.plot(df_front['distance[mm]'], df_front['cube flux density [T]'], 'bo')
     plt.plot(df_front['distance[mm]'], result.best_fit, 'r--', label='without Qpole')
     plt.plot(df_front['distance[mm]'], result_qp.best_fit, "--",c="orange", label='with Qpole')
@@ -91,7 +90,7 @@ def plot_fit(df_front, result, result_qp):
     plt.grid()
     plt.legend()
 
-plot_fit(df_front, result, result_qp)
+plot_results_dipole_quadrupole(df_front, result, result_qp)
 # %%
 # evaluate fit at r=50mm
 r = 50
@@ -132,6 +131,24 @@ fit_large_cylinder(df_front, Bx_dp)
 
 # %%
 # clear nan from A
-A = A.dropna()
 A = df_front[['small cylinder flux density [T]','distance[mm]']]
+A = A.dropna()
 x,y = A.to_numpy().T
+x,y
+
+
+# %%
+def fit_dipole(df_front, Bx_dp,y,x):
+    model_dp = Model(Bx_dp)
+    params = model_dp.make_params(m=4.6611e+08,r0=-0.05,Q=0)
+    result = model_dp.fit(df_front[y], params, r=df_front[x])
+    print(result.fit_report())
+    return result
+
+result_dp = fit_dipole(df_front, Bx_dp,'cube flux density [T]','distance[mm]')
+# %%
+result_qp = fit_dipole(df_front, Bx_with_qpole,'cube flux density [T]','distance[mm]')
+
+plot_results_dipole_quadrupole(df_front, result_dp, result_qp)
+
+# %%
