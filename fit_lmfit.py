@@ -9,17 +9,17 @@ from lmfit import Model
 # %%
 # Read data
 df_front = pd.read_csv('Magnetfeld-front.csv')
-df_side = pd.read_csv('Magnetfeld-front.csv')
+df_side = pd.read_csv('Magnetfeld-side.csv')
 # clean data
 df_front["cube flux density [T]"] = -df_front["cube flux density [T]"]
 # df_front["distance [mm]"] = df_front["distance [mm]"]
-df_side["cube flux density [T]"] = -df_side["cube flux density [T]"]
+df_side["cube flux density [T]"] = df_side["cube flux density [T]"]
 
 # convert to si
 df_front['distance[m]'] = df_front['distance[mm]']*1e-3
 df_side['distance[m]'] = df_side['distance[mm]']*1e-3
 
-df_front
+df_side
 # %%
 # $\vec{B}(r)=\frac{\mu_0}{4 \pi r^3}[3(\vec{m} \cdot \hat{r}) \hat{r}-\vec{m}]$
 
@@ -83,8 +83,13 @@ def fit_cube_qp(df_front, Bx_with_qpole):
 result_qp = fit_cube_qp(df_front, Bx_with_qpole)
 # %%
 # plot fit
-def plot_results_dipole_quadrupole(df_front, result, result_qp):
-    plt.plot(df_front['distance[mm]'], df_front['cube flux density [T]'], 'bo')
+def plot_results_dipole_quadrupole(df_front, result, result_qp,parameter):
+    df_front = df_front.copy()
+    # if it contains NaN values, remove them
+    if df_front[parameter].isnull().values.any():
+        print("removing NaN values")
+        df_front = df_front.dropna()
+    plt.plot(df_front['distance[mm]'], df_front[parameter], 'bo')
     plt.plot(df_front['distance[mm]'], result.best_fit, 'r--', label='without Qpole')
     plt.plot(df_front['distance[mm]'], result_qp.best_fit, "--",c="orange", label='with Qpole')
 
@@ -94,7 +99,7 @@ def plot_results_dipole_quadrupole(df_front, result, result_qp):
     plt.grid()
     plt.legend()
 
-plot_results_dipole_quadrupole(df_front, result, result_qp)
+plot_results_dipole_quadrupole(df_front, result, result_qp,'cube flux density [T]')
 # %%
 # evaluate fit at r=50mm
 r = 50
@@ -154,12 +159,12 @@ result_qp_cube_front = fit_dipole(df_front, Bx_with_qpole,'cube flux density [T]
 
 df_results = pd.DataFrame(index=["cube","small cylinder","big cylinder"],columns=["front","side"])
 
-for df,name in zip([df_front, df_side],["front","side"]):
+for df,direction,f in zip([df_front, df_side],["front","side"],[Bx_dp,Bz]):
     for magnet_index,y in zip(["cube","small cylinder","big cylinder"],['cube flux density [T]','small cylinder flux density [T]','big cylinder flux density [T]']):
         for x in ['distance[m]']:
-            result_dp = fit_dipole(df, Bx_dp,y,x)
+            result_dp = fit_dipole(df,f ,y,x)
             result_qp = fit_dipole(df, Bx_with_qpole,y,x)
-            # df_results.loc[[name,magnet_index]] = [result_dp.params['m'].value,result_qp.params['m'].value]
-            df_results.loc[magnet_index,name] = f"{result_dp.params['m'].value} +/- {result_dp.params['m'].stderr}"
+            df_results.loc[magnet_index,direction] = f"{result_dp.params['m'].value} +/- {result_dp.params['m'].stderr}"
+            plot_results_dipole_quadrupole(df, result_dp, result_qp,y)
 
 df_results
