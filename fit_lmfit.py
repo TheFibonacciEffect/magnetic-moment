@@ -56,8 +56,8 @@ def Bx_with_qpole(r, m,Q,r0):
     return const.mu_0/(4*np.pi)*2*(m*1/(r-r0)**3 + const.mu_0/(4*np.pi)*Q/(r-r0)**4)
 
 
-def Bz(r, m):
-    return -const.mu_0/(4*np.pi*r**3)*m
+def Bz(r, m,r0):
+    return -const.mu_0/(4*np.pi*(r-r0)**3)*m
 
 # %%
 # withput Qpole
@@ -75,7 +75,7 @@ result = fit_cube_dp(df_front, Bx_dp)
 # with Qpole
 def fit_cube_qp(df_front, Bx_with_qpole):
     model_qpole = Model(Bx_with_qpole)
-    params_qp = model_qpole.make_params(m=4.6611e+08,Q=0,r0=-0.05)
+    params_qp = model_qpole.make_params(m=1000,Q=-10,r0=-0.05)
     result_qp = model_qpole.fit(df_front['cube flux density [T]'], params_qp, r=df_front['distance[mm]'])
     print(result_qp.fit_report())
     return result_qp
@@ -100,6 +100,7 @@ def plot_results_dipole_quadrupole(df_front, result, result_qp,parameter):
     plt.legend()
 
 plot_results_dipole_quadrupole(df_front, result, result_qp,'cube flux density [T]')
+plt.savefig("Magnetfeld-front.png")
 # %%
 # evaluate fit at r=50mm
 r = 50
