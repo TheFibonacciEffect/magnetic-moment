@@ -140,14 +140,6 @@ fit_large_cylinder(df_front, Bx_dp)
 #    r0: -6.99293535 +/- 0.44472250 (6.36%) (init = -0.05)
 
 # %%
-# clear nan from A
-A = df_front[['small cylinder flux density [T]','distance[mm]']]
-A = A.dropna()
-x,y = A.to_numpy().T
-x,y
-
-
-# %%
 def fit_dipole(df_front, Bx_dp,y,x):
     model_dp = Model(Bx_dp)
     params = model_dp.make_params(m=4.6611e+08,r0=-0.05,Q=0)
@@ -169,3 +161,12 @@ for df,direction,f in zip([df_front, df_side],["front","side"],[Bx_dp,Bz]):
             plot_results_dipole_quadrupole(df, result_dp, result_qp,y)
 
 df_results
+# %%
+def plot_results_dipole(df_front, result):
+    plt.plot(df_front['distance[mm]'], df_front['cube flux density [T]'], 'bo')
+    plt.plot(df_front['distance[mm]'], result.best_fit, 'r--', label='without Qpole')
+    plt.xlabel('distance [mm]')
+    plt.ylabel('flux density [T]')
+    plt.title("Magneticfield in front of the magnet")
+    plt.grid()
+    plt.legend()
