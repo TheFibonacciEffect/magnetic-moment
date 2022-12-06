@@ -140,17 +140,19 @@ fit_large_cylinder(df_front, Bx_dp)
 #    r0: -6.99293535 +/- 0.44472250 (6.36%) (init = -0.05)
 
 # %%
-def plot_results_dipole(df_front, result,parameter):
+def plot_results_dipole(df_front, result,parameter,fig,ax):
+    plt.figure(fig)
+    plt.sca(ax)
     df_front = df_front.copy()
     # if it contains NaN values, remove them
     if df_front[parameter].isnull().values.any():
         print("removing NaN values")
         df_front = df_front.dropna()
     plt.plot(df_front['distance[mm]'], df_front[parameter], 'bo')
-    plt.plot(df_front['distance[mm]'], result.best_fit, 'r--', label='best fit'+ parameter)
+    plt.plot(df_front['distance[mm]'], result.best_fit, 'r--', label='best fit')
     plt.xlabel('distance [mm]')
     plt.ylabel('flux density [T]')
-    plt.title("fit the magnetic field")
+    plt.title(parameter)
     plt.grid()
     plt.legend()
 
@@ -161,19 +163,21 @@ def fit_dipole(df_front, Bx_dp,y,x):
     print(result.fit_report())
     return result
 
+fig,ax = plt.subplots(1,3,figsize=(15,5))
+
 result_dp_cube_front = fit_dipole(df_front, Bx_dp,'cube flux density [T]','distance[m]')
 result_qp_cube_front = fit_dipole(df_front, Bx_with_qpole,'cube flux density [T]','distance[m]')
 
 df_results = pd.DataFrame(index=["cube","small cylinder","big cylinder"],columns=["front","side"])
 
 for df,direction,f in zip([df_front, df_side],["front","side"],[Bx_dp]):
-    for magnet_index,y in zip(["cube","small cylinder","big cylinder"],['cube flux density [T]','small cylinder flux density [T]','big cylinder flux density [T]']):
+    for magnet_index,y,i in zip(["cube","small cylinder","big cylinder"],['cube flux density [T]','small cylinder flux density [T]','big cylinder flux density [T]'],[0,1,2]):
         for x in ['distance[m]']:
             result_dp = fit_dipole(df,f ,y,x)
             result_qp = fit_dipole(df, Bx_with_qpole,y,x)
             df_results.loc[magnet_index,direction] = f"{result_dp.params['m'].value} +/- {result_dp.params['m'].stderr}"
-            plot_results_dipole(df, result_dp,y)
+            plot_results_dipole(df, result_dp,y,fig,ax[i])
 
-plt.savefig("fitting.png")
+plt.savefig("fitting three panels.png")
 # %%
 df_results
