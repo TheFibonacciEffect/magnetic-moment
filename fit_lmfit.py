@@ -140,6 +140,20 @@ fit_large_cylinder(df_front, Bx_dp)
 #    r0: -6.99293535 +/- 0.44472250 (6.36%) (init = -0.05)
 
 # %%
+def plot_results_dipole(df_front, result,parameter):
+    df_front = df_front.copy()
+    # if it contains NaN values, remove them
+    if df_front[parameter].isnull().values.any():
+        print("removing NaN values")
+        df_front = df_front.dropna()
+    plt.plot(df_front['distance[mm]'], df_front[parameter], 'bo')
+    plt.plot(df_front['distance[mm]'], result.best_fit, 'r--', label='best fit'+ parameter)
+    plt.xlabel('distance [mm]')
+    plt.ylabel('flux density [T]')
+    plt.title("fit the magnetic field")
+    plt.grid()
+    plt.legend()
+
 def fit_dipole(df_front, Bx_dp,y,x):
     model_dp = Model(Bx_dp)
     params = model_dp.make_params(m=4.6611e+08,r0=-0.05,Q=0)
@@ -152,21 +166,14 @@ result_qp_cube_front = fit_dipole(df_front, Bx_with_qpole,'cube flux density [T]
 
 df_results = pd.DataFrame(index=["cube","small cylinder","big cylinder"],columns=["front","side"])
 
-for df,direction,f in zip([df_front, df_side],["front","side"],[Bx_dp,Bz]):
+for df,direction,f in zip([df_front, df_side],["front","side"],[Bx_dp]):
     for magnet_index,y in zip(["cube","small cylinder","big cylinder"],['cube flux density [T]','small cylinder flux density [T]','big cylinder flux density [T]']):
         for x in ['distance[m]']:
             result_dp = fit_dipole(df,f ,y,x)
             result_qp = fit_dipole(df, Bx_with_qpole,y,x)
             df_results.loc[magnet_index,direction] = f"{result_dp.params['m'].value} +/- {result_dp.params['m'].stderr}"
-            plot_results_dipole_quadrupole(df, result_dp, result_qp,y)
+            plot_results_dipole(df, result_dp,y)
 
 df_results
-# %%
-def plot_results_dipole(df_front, result):
-    plt.plot(df_front['distance[mm]'], df_front['cube flux density [T]'], 'bo')
-    plt.plot(df_front['distance[mm]'], result.best_fit, 'r--', label='without Qpole')
-    plt.xlabel('distance [mm]')
-    plt.ylabel('flux density [T]')
-    plt.title("Magneticfield in front of the magnet")
-    plt.grid()
-    plt.legend()
+
+plt.savefig("fitting.png")
