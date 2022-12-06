@@ -174,6 +174,6 @@ for df,direction,f in zip([df_front, df_side],["front","side"],[Bx_dp]):
             df_results.loc[magnet_index,direction] = f"{result_dp.params['m'].value} +/- {result_dp.params['m'].stderr}"
             plot_results_dipole(df, result_dp,y)
 
-df_results
-
 plt.savefig("fitting.png")
+# %%
+df_results
