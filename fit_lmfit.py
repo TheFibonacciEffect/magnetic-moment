@@ -160,7 +160,7 @@ def fit_dipole(df_front, Bx_dp,y,x):
     model_dp = Model(Bx_dp)
     params = model_dp.make_params(m=4.6611e+08,r0=-0.05,Q=0)
     result = model_dp.fit(df_front[y], params, r=df_front[x],nan_policy='omit')
-    # print(result.fit_report())
+    print(result.fit_report())
     return result
 
 fig,ax = plt.subplots(1,3,figsize=(15,5))
@@ -176,6 +176,8 @@ for df,direction,f in zip([df_front, df_side],["front","side"],[Bx_dp,Bz]):
             curr_ax = ax[i]
             curr_ax.set_xscale("log")
             curr_ax.set_yscale("log")
+            print(direction+" " + magnet_index)
+            print("-"*20)
             result_dp = fit_dipole(df,f ,y,x)
             # result_qp = fit_dipole(df, Bx_with_qpole,y,x)
             r = 20
