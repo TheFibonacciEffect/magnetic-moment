@@ -148,7 +148,7 @@ def plot_results_dipole(df_front, result,parameter,fig,ax,label='best fit'):
     if df_front[parameter].isnull().values.any():
         print("removing NaN values")
         df_front = df_front.dropna()
-    plt.plot(df_front['distance[mm]'], df_front[parameter], 'bo')
+    plt.errorbar(df_front['distance[mm]'], df_front[parameter],xerr=0.5e-3, yerr=0.01, fmt='bo', label='data '+ parameter)
     plt.plot(df_front['distance[mm]'], result.best_fit, 'r--', label=label)
     plt.xlabel('distance [mm]')
     plt.ylabel('flux density [T]')
