@@ -87,7 +87,7 @@ def plot_results_dipole_quadrupole(df_front, result, result_qp,parameter):
     df_front = df_front.copy()
     # if it contains NaN values, remove them
     if df_front[parameter].isnull().values.any():
-        print("removing NaN values")
+        # print("removing NaN values")
         df_front = df_front.dropna()
     plt.plot(df_front['distance[mm]'], df_front[parameter], 'bo')
     plt.plot(df_front['distance[mm]'], result.best_fit, 'r--', label='without Qpole')
@@ -146,7 +146,7 @@ def plot_results_dipole(df_front, result,parameter,fig,ax,label='best fit'):
     df_front = df_front.copy()
     # if it contains NaN values, remove them
     if df_front[parameter].isnull().values.any():
-        print("removing NaN values")
+        # print("removing NaN values")
         df_front = df_front.dropna()
     plt.errorbar(df_front['distance[mm]'], df_front[parameter],xerr=0.5e-3, yerr=0.01, fmt='bo', label='data '+ parameter)
     plt.plot(df_front['distance[mm]'], result.best_fit, 'r--', label=label)
@@ -160,7 +160,7 @@ def fit_dipole(df_front, Bx_dp,y,x):
     model_dp = Model(Bx_dp)
     params = model_dp.make_params(m=4.6611e+08,r0=-0.05,Q=0)
     result = model_dp.fit(df_front[y], params, r=df_front[x],nan_policy='omit')
-    print(result.fit_report())
+    # print(result.fit_report())
     return result
 
 fig,ax = plt.subplots(1,3,figsize=(15,5))
@@ -173,8 +173,13 @@ df_results = pd.DataFrame(index=["cube","small cylinder","big cylinder"],columns
 for df,direction,f in zip([df_front, df_side],["front","side"],[Bx_dp,Bz]):
     for magnet_index,y,i in zip(["cube","small cylinder","big cylinder"],['cube flux density [T]','small cylinder flux density [T]','big cylinder flux density [T]'],[0,1,2]):
         for x in ['distance[m]']:
+            curr_ax = ax[i]
+            curr_ax.set_xscale("log")
+            curr_ax.set_yscale("log")
             result_dp = fit_dipole(df,f ,y,x)
-            result_qp = fit_dipole(df, Bx_with_qpole,y,x)
+            # result_qp = fit_dipole(df, Bx_with_qpole,y,x)
+            r = 20
+            print(direction+" " + magnet_index + f" at r={r}mm"+ f" without Qpole: {result_dp.eval(r=r)} +/. {result_dp.eval_uncertainty(r=r)[0]}")
             df_results.loc[magnet_index,direction] = f"{result_dp.params['m'].value} +/- {result_dp.params['m'].stderr}"
             plot_results_dipole(df, result_dp,y,fig,ax[i],"best fit " + direction)
 
